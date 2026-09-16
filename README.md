@@ -19,51 +19,100 @@ prompt → plan → sandbox → provision → execute → recover → result →
 ```
 
 ```mermaid
-flowchart LR
-    HOST["Your App<br/>API · Worker · CLI"]
-    PORTS["AgentPorts<br/>events · subagents · findings · guidance"]
+flowchart TB
 
-    subgraph ORCH["ORCHESTRATOR"]
-        API["Orchestrator API<br/>plan · run · suggest_skills · Learn"]
-        GRAPH["LangGraph<br/>agent loop · replanning"]
-        LEARN["LearnAuthoring / LearnLab<br/>draft skills & tools"]
-        CATALOG["Skills & Tools Catalog<br/>skills/ · tools/catalog/"]
-        BRIDGE["StreamSocketServer<br/>+ RpcServer"]
-    end
-
-    subgraph LLM["LLM STACK"]
-        LC["LangChain Core<br/>LangChain LiteLLM"]
-        LITE["LiteLLM"]
-        PROVIDER["OpenRouter · OpenAI<br/>or other providers"]
-    end
-
-    subgraph EXEC["EXECUTION"]
-        DOCKER["Docker Sandbox"]
-        RUNNER["Execution Runner<br/>run_binary · run_cli<br/>run_report · run_glue"]
-        HELPERS["Skill Helpers<br/>orchestrator_tools client"]
-    end
+    %% =========================
+    %% ENTRY
+    %% =========================
+    HOST["Your Application<br/>API · Worker · CLI"]
+    PORTS["AgentPorts<br/>Events · Subagents · Findings · Guidance"]
 
     HOST --> PORTS
+
+    %% =========================
+    %% ORCHESTRATOR
+    %% =========================
+    subgraph ORCH["ORCHESTRATOR"]
+        direction TB
+
+        API["Orchestrator API<br/>Plan · Run · Suggest Skills · Learn"]
+
+        GRAPH["LangGraph<br/>Agent Loop · Replanning"]
+
+        subgraph CAP["CAPABILITIES"]
+            direction LR
+            LEARN["LearnAuthoring / LearnLab<br/>Draft Skills & Tools"]
+            CATALOG["Skills & Tools Catalog<br/>skills/ · tools/catalog/"]
+        end
+
+        API --> GRAPH
+        API --> LEARN
+        LEARN --> CATALOG
+        GRAPH --> CATALOG
+    end
+
     PORTS --> API
 
-    API --> GRAPH
-    API --> LEARN
+    %% =========================
+    %% LLM
+    %% =========================
+    subgraph LLM["LLM STACK"]
+        direction TB
 
-    GRAPH <--> CATALOG
-    LEARN --> CATALOG
+        LC["LangChain Core<br/>LangChain LiteLLM"]
+        LITE["LiteLLM"]
+        PROVIDER["LLM Provider<br/>OpenRouter · OpenAI · Other Providers"]
 
+        LC --> LITE
+        LITE --> PROVIDER
+    end
+
+    %% =========================
+    %% EXECUTION
+    %% =========================
+    subgraph EXEC["EXECUTION ENVIRONMENT"]
+        direction TB
+
+        DOCKER["Docker Sandbox"]
+        RUNNER["Execution Runner<br/>run_binary · run_cli · run_report · run_glue"]
+        HELPERS["Skill Helpers<br/>orchestrator_tools client"]
+
+        DOCKER --> RUNNER
+        RUNNER --> HELPERS
+    end
+
+    %% =========================
+    %% CONNECTIONS
+    %% =========================
     GRAPH --> LC
     LEARN --> LC
-    LC --> LITE
-    LITE --> PROVIDER
 
     GRAPH --> DOCKER
     CATALOG --> DOCKER
 
-    DOCKER --> RUNNER
-    RUNNER --> HELPERS
+    %% =========================
+    %% RETURN PATH
+    %% =========================
+    BRIDGE["StreamSocketServer + RpcServer"]
+
     HELPERS --> BRIDGE
     BRIDGE --> PORTS
+
+    %% =========================
+    %% GITHUB-FRIENDLY STYLING
+    %% =========================
+
+    classDef entry fill:#ddf4ff,stroke:#0969da,color:#1f2328,stroke-width:1.5px
+    classDef orch fill:#fbefff,stroke:#8250df,color:#1f2328,stroke-width:1.5px
+    classDef llm fill:#fff8c5,stroke:#9a6700,color:#1f2328,stroke-width:1.5px
+    classDef exec fill:#dafbe1,stroke:#1a7f37,color:#1f2328,stroke-width:1.5px
+    classDef bridge fill:#f6f8fa,stroke:#57606a,color:#1f2328,stroke-width:1.5px
+
+    class HOST,PORTS entry
+    class API,GRAPH,LEARN,CATALOG orch
+    class LC,LITE,PROVIDER llm
+    class DOCKER,RUNNER,HELPERS exec
+    class BRIDGE bridge
 ```
 
 ## Features
