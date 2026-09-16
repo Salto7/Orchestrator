@@ -1,0 +1,12 @@
+id: jq
+name: jq
+description: Lightweight JSON processor
+tier: catalog
+binary: jq
+binaries: [jq]
+install:
+  - type: apt
+    packages: [jq]
+verify:
+  - command: jq --version
+tags: [cli, json]
